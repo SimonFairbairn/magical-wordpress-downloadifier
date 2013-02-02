@@ -1,7 +1,7 @@
 Magical Wordpress Downloadifier
 ===============================
 
-Automatically grabs your database and files and installs them to a local testing server
+Automatically grabs your database and latest uploads and installs them to a local testing server
 
 ### Usage
 
