@@ -1,6 +1,7 @@
 #!/bin/bash
 
-# This is provided AS IS. If you break anything, it's on you.
+# This is provided AS IS. Make sure that all of the variables are set right. 
+# If you break anything, it's on you.
 
 # A script to sync your remote server
 # with your local setup 
