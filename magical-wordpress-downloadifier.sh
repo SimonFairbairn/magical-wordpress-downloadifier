@@ -12,7 +12,7 @@ function show_help {
     echo "Syncs a WordPress server to a local instance"
     echo
     echo " -d Include the database"
-    echo " -f Include all of the uploads"
+    echo " -f Include downloading uploads"
     echo " -c The config file to read from"
     echo
 }
