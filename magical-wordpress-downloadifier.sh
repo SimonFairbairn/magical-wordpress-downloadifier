@@ -56,14 +56,25 @@ ROOT="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
 echo $ROOT
 exit 
 
+# The year of uploads. To save time, I only download the current year's uploads, but you can specify "all"
+# to download everything in the WordPress uploads folder.
+year=2015
+
 ## END OF USER VARIABLES ##
+file=$year
+if [ $year == "all" ] 
+then
+	echo "Downloading all files"
+	file="."
+fi
 
 # Zip up the files
 ssh $remote << EOF
 	cd $uploadPath
-	zip -r $year.zip $year
+	zip -r $year.zip $file
 	ls -lah
 EOF
+
 # Download them
 scp $remote:$uploadPath/$year.zip ~/Downloads/$year.zip
 # Clean up after ourselves
