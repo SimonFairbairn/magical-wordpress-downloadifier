@@ -1,0 +1,29 @@
+# Your SSH login
+remote=user@111.222.333.444 
+# Your remote db name
+remoteDB=dbname
+# Your remote db username
+remoteU=dbuser
+# Your remote db password
+remotePW=dbpassword
+
+# Your local DB
+localDB=dbname
+# Your local DB Username
+localU=dbuser
+# Your local DB password
+localPW=dbpassword
+
+# Remote URL
+remoteURL=www.example.com
+# Local URL 
+localURL=example.local
+
+# Full to your remote uploads folder (no trailing slash)
+uploadPath=/home/user/public_html/wp-content/uploads
+
+# Full path to your local uploads folder (no trailing slash)
+localPath="~/Sites/wp-content/uploads"
+
+# The year of uploads. To save time, I only download the current year's uploads
+year=2013
