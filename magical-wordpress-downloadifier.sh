@@ -1,39 +1,60 @@
 #!/bin/bash
 
-# This is provided AS IS. If you break anything, it's on you.
+# This is provided AS IS. No warranty of any kind.
 
 # A script to sync your remote server
 # with your local setup 
 
-# Your SSH login
-remote=user@111.222.333.444 
-# Your remote db name
-remoteDB=dbname
-# Your remote db username
-remoteU=dbuser
-# Your remote db password
-remotePW=dbpassword
+function show_help {
+    echo
+    echo "Usage: magical-wordpress-downloadifier.sh -df -c </path/to/config>" 
+    echo
+    echo "Syncs a WordPress server to a local instance"
+    echo
+    echo " -d Include the database"
+    echo " -f Include all of the uploads"
+    echo " -c The config file to read from"
+    echo
+}
 
-# Your local DB
-localDB=dbname
-# Your local DB Username
-localU=dbuser
-# Your local DB password
-localPW=dbpassword
+DATABASE=false
+FILES=false
+CONFIG=false
+while getopts "h?dfc:" opt; do
+    case "$opt" in
+    h|\?)
+        show_help
+        exit 0
+        ;;
+    d)  DATABASE=true
+        ;;        
+    f)  FILES=true
+        ;;        
+    c)  CONFIG=$OPTARG
+        ;;
+    esac
+done
 
-# Remote URL
-remoteURL=www.example.com
-# Local URL 
-localURL=example.local
+if [[ $CONFIG == false ]];then 
+	show_help
+	echo 
+	echo "Config file required"
+	exit 1
+fi
 
-# Full to your remote uploads folder (no trailing slash)
-uploadPath=/home/user/public_html/wp-content/uploads
 
-# Full path to your local uploads folder (no trailing slash)
-localPath="~/Sites/wp-content/uploads"
+# Resolve symlinks
+SOURCE="${BASH_SOURCE[0]}"
+while [ -h "$SOURCE" ]; do # resolve $SOURCE until the file is no longer a symlink
+  ROOT="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
+  SOURCE="$(readlink "$SOURCE")"
+  [[ $SOURCE != /* ]] && SOURCE="$ROOT/$SOURCE" # if $SOURCE was a relative symlink, we need to resolve it relative to the path where the symlink file was located
+done
+ROOT="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
 
-# The year of uploads. To save time, I only download the current year's uploads
-year=2013
+
+echo $ROOT
+exit 
 
 ## END OF USER VARIABLES ##
 
