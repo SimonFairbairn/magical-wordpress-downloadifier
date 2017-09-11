@@ -3,41 +3,45 @@
 # This is provided AS IS. No warranty of any kind.
 
 # A script to sync your remote server
-# with your local setup 
+# with your local setup
 
 function show_help {
     echo
-    echo "Usage: magical-wordpress-downloadifier.sh -df -c </path/to/config>" 
+    echo "Usage: magical-wordpress-downloadifier.sh -df -c </path/to/config>"
     echo
     echo "Syncs a WordPress server to a local instance"
     echo
-    echo " -d Include the database"
+    echo " -d Download and update the database"
+	echo " -u Just update the database"
     echo " -f Include downloading uploads"
     echo " -c The config file to read from"
     echo
 }
 
 DATABASE=false
+UPDATE=false
 FILES=false
 CONFIG=false
-while getopts "h?dfc:" opt; do
+while getopts "h?dufc:" opt; do
     case "$opt" in
     h|\?)
         show_help
         exit 0
         ;;
     d)  DATABASE=true
-        ;;        
+        ;;
+	u)  UPDATE=true
+		;;
     f)  FILES=true
-        ;;        
+        ;;
     c)  CONFIG=$OPTARG
         ;;
     esac
 done
 
-if [[ $CONFIG == false ]];then 
+if [[ $CONFIG == false ]];then
 	show_help
-	echo 
+	echo
 	echo "Config file required"
 	exit 1
 fi
@@ -55,7 +59,7 @@ fi
 function getFiles {
 
 	file=$year
-	if [ $year == "all" ] 
+	if [ $year == "all" ]
 	then
 		echo "Downloading all files"
 		file="."
@@ -80,32 +84,51 @@ EOF
 	unzip $year.zip
 }
 
-function updateDatabase {
-	# Do a dump of the remote database and download it 
+function downloadDatabase {
+	# Do a dump of the remote database and download it
 	ssh $remote -C -o CompressionLevel=9 mysqldump -u $remoteU --password=$remotePW --add-drop-table $remoteDB > ~/Downloads/$remoteDB.sql
 	# Install the database locally
 	mysql -u $localU --password=$localPW $localDB < ~/Downloads/$remoteDB.sql
+
+}
+
+function updateDatabase {
 	# Replace all references to remote images and files to the local ones instead (assumes database prefix of wp)
 mysql -v -t -u $localU --password=$localPW <<QUERY_INPUT
 		UPDATE \`$localDB\`.\`wp_posts\` SET post_content = REPLACE(post_content, 'http://$remoteURL', 'http://$localURL');
 		SELECT ROW_COUNT();
+		UPDATE \`$localDB\`.\`wp_posts\` SET post_content = REPLACE(post_content, 'https://$remoteURL', 'http://$localURL');
+		SELECT ROW_COUNT();
 		UPDATE \`$localDB\`.\`wp_options\` SET option_value = REPLACE(option_value, 'http://$remoteURL', 'http://$localURL') WHERE option_name='siteurl';
 		SELECT ROW_COUNT();
 		UPDATE \`$localDB\`.\`wp_options\` SET option_value = REPLACE(option_value, 'http://$remoteURL', 'http://$localURL') WHERE option_name='home';
-		SELECT ROW_COUNT();				
-		UPDATE \`$localDB\`.\`wp_postmeta\` SET meta_value = REPLACE(meta_value, 'http://$remoteURL', 'http://$localURL') ;
-		SELECT ROW_COUNT();		
+		SELECT ROW_COUNT();
+		UPDATE \`$localDB\`.\`wp_options\` SET option_value = REPLACE(option_value, 'https://$remoteURL', 'http://$localURL') WHERE option_name='siteurl';
+		SELECT ROW_COUNT();
+		UPDATE \`$localDB\`.\`wp_options\` SET option_value = REPLACE(option_value, 'https://$remoteURL', 'http://$localURL') WHERE option_name='home';
+		SELECT ROW_COUNT();
 QUERY_INPUT
+
+		# UPDATE \`$localDB\`.\`wp_postmeta\` SET meta_value = REPLACE(meta_value, 'http://$remoteURL', 'http://$localURL') ;
+		# SELECT ROW_COUNT();
+
 }
 
 if [[ "$FILES" == true ]]; then
 	getFiles
-else 
+else
 	echo "Skipping file transfer..."
 fi
 
 
 if [[ "$DATABASE" == true ]]; then
+	downloadDatabase
+	updateDatabase
+else
+	echo "Skipping database transfer..."
+fi
+
+if [[ "$UPDATE" == true && "$DATABASE" == false ]]; then
 	updateDatabase
 else
 	echo "Skipping database transfer..."
