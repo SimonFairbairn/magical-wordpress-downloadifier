@@ -15,6 +15,7 @@ function show_help {
 	echo " -u Just update the database"
     echo " -f Include downloading uploads"
     echo " -c The config file to read from"
+	echo " -y The year of photos to download"
     echo
 }
 
@@ -22,7 +23,8 @@ DATABASE=false
 UPDATE=false
 FILES=false
 CONFIG=false
-while getopts "h?dufc:" opt; do
+OPTYEAR=false
+while getopts "h?dufc:y:" opt; do
     case "$opt" in
     h|\?)
         show_help
@@ -33,6 +35,8 @@ while getopts "h?dufc:" opt; do
 	u)  UPDATE=true
 		;;
     f)  FILES=true
+        ;;
+	y)  OPTYEAR=$OPTARG
         ;;
     c)  CONFIG=$OPTARG
         ;;
@@ -47,6 +51,10 @@ if [[ $CONFIG == false ]];then
 fi
 
 source $CONFIG
+
+if [[ $OPTYEAR != false ]]; then
+	year=$OPTYEAR
+fi
 
 if [[ ! -n $remote ]]; then
 	echo "ERROR: Remote server not found in config file"
@@ -95,17 +103,17 @@ function downloadDatabase {
 function updateDatabase {
 	# Replace all references to remote images and files to the local ones instead (assumes database prefix of wp)
 mysql -v -t -u $localU --password=$localPW <<QUERY_INPUT
-		UPDATE \`$localDB\`.\`wp_posts\` SET post_content = REPLACE(post_content, 'http://$remoteURL', 'http://$localURL');
+		UPDATE \`$localDB\`.\`wp_posts\` SET post_content = REPLACE(post_content, 'http://$remoteURL', '$localURL');
 		SELECT ROW_COUNT();
-		UPDATE \`$localDB\`.\`wp_posts\` SET post_content = REPLACE(post_content, 'https://$remoteURL', 'http://$localURL');
+		UPDATE \`$localDB\`.\`wp_posts\` SET post_content = REPLACE(post_content, 'https://$remoteURL', '$localURL');
 		SELECT ROW_COUNT();
-		UPDATE \`$localDB\`.\`wp_options\` SET option_value = REPLACE(option_value, 'http://$remoteURL', 'http://$localURL') WHERE option_name='siteurl';
+		UPDATE \`$localDB\`.\`wp_options\` SET option_value = REPLACE(option_value, 'http://$remoteURL', '$localURL') WHERE option_name='siteurl';
 		SELECT ROW_COUNT();
-		UPDATE \`$localDB\`.\`wp_options\` SET option_value = REPLACE(option_value, 'http://$remoteURL', 'http://$localURL') WHERE option_name='home';
+		UPDATE \`$localDB\`.\`wp_options\` SET option_value = REPLACE(option_value, 'http://$remoteURL', '$localURL') WHERE option_name='home';
 		SELECT ROW_COUNT();
-		UPDATE \`$localDB\`.\`wp_options\` SET option_value = REPLACE(option_value, 'https://$remoteURL', 'http://$localURL') WHERE option_name='siteurl';
+		UPDATE \`$localDB\`.\`wp_options\` SET option_value = REPLACE(option_value, 'https://$remoteURL', '$localURL') WHERE option_name='siteurl';
 		SELECT ROW_COUNT();
-		UPDATE \`$localDB\`.\`wp_options\` SET option_value = REPLACE(option_value, 'https://$remoteURL', 'http://$localURL') WHERE option_name='home';
+		UPDATE \`$localDB\`.\`wp_options\` SET option_value = REPLACE(option_value, 'https://$remoteURL', '$localURL') WHERE option_name='home';
 		SELECT ROW_COUNT();
 QUERY_INPUT
 
